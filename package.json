@@ -8,6 +8,9 @@
     "mqpacker",
     "postcss"
   ],
+  "homepage": "https://github.com/timgrafton/babel-plugin-styled-components-mqpacker",
+  "repository": "git@github.com:timgrafton/babel-plugin-styled-components-mqpacker.git",
+  "bugs": "https://github.com/timgrafton/babel-plugin-styled-components-mqpacker/issues",
   "babel": {
     "env": {
       "plugin": {
