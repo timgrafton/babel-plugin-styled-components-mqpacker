@@ -14,21 +14,18 @@ const splitExpressions = css => {
   while ((found = expressionsRegex.exec(css)) !== null) {
     matches.push(found)
   }
-
-  const { prevEnd, quasiTerms, exprTerms } = matches.reduce(
+  const { prevEnd, quasiTerms, expressionTerms } = matches.reduce(
     (acc, match) => {
       acc.quasiTerms.push(css.substring(acc.prevEnd, match.index))
       const [placeholder, expressionIndex] = match
-      acc.exprTerms.push(expressionIndex)
+      acc.expressionTerms.push(expressionIndex)
       acc.prevEnd = match.index + placeholder.length
       return acc
     },
-    { prevEnd: 0, quasiTerms: [], exprTerms: [] },
+    { prevEnd: 0, quasiTerms: [], expressionTerms: [] },
   )
-
   quasiTerms.push(css.substring(prevEnd, css.length))
-
-  return { quasiTerms, exprTerms }
+  return { quasiTerms, expressionTerms }
 }
 
 const buildQuasisAst = (t, terms) =>
@@ -47,7 +44,7 @@ module.exports = ({ types: t }) => ({
     // media queries extracted from styled components
     this.mediaRules = []
     // styled component ids substituted with placeholders
-    this.compNames = []
+    this.componentSelectors = []
     // styled component expressions substituted with placeholders
     this.expressions = []
   },
@@ -56,7 +53,6 @@ module.exports = ({ types: t }) => ({
       // media queries from all styled components are packed together on traversal exit
       exit({ node: { body }, scope: { bindings: { injectGlobal } } }) {
         if (this.mediaRules.length <= 0) return
-
         // stringify media queries object back into css
         let css = stringify({
           type: 'stylesheet',
@@ -66,18 +62,20 @@ module.exports = ({ types: t }) => ({
             ello: [],
           },
         })
-        // pack media queries
+        // pack same CSS media query rules into one
         ;({ css } = postcss([mqpacker]).process(css))
-
-        // replace placeholders back with their original values
-        css = css.replace(componentsRegex, (match, id) => `\${${this.compNames[id]}}`)
+        // replace component placeholders with their original values
+        css = css.replace(
+          componentsRegex,
+          (match, id) => `\${${this.componentSelectors[id]}}`,
+        )
+        // replace expression placeholders with their original values
         css = css.replace(
           expressionsRegex,
           (match, id) => `\${${this.expressions[id].name}}`,
         )
-
-        // insert injectGlobal declaration if not already exists
         if (injectGlobal) {
+          // add media queries to existing injectGlobal method
           const { referencePaths } = injectGlobal
           const { container: { quasi: { quasis } } } = referencePaths[
             referencePaths.length - 1
@@ -86,6 +84,9 @@ module.exports = ({ types: t }) => ({
           value.raw += css
           value.cooked += css
         } else {
+          // otherwise create injectGlobal method THEN insert media queries
+
+          // declare injectGlobal first
           body.unshift(
             t.variableDeclaration('const', [
               t.variableDeclarator(
@@ -103,7 +104,7 @@ module.exports = ({ types: t }) => ({
               ),
             ]),
           )
-
+          // then use it
           body.push(
             t.expressionStatement(
               t.taggedTemplateExpression(
@@ -132,62 +133,68 @@ module.exports = ({ types: t }) => ({
 
       if (!tmatch()) return
 
+      // component selector
       const { parent: { id: { name } } } = path
 
       const expressionPlaceholder = i => `__QUASI_EXPR_${i}__`
-      const compPlaceholder = i => `__COMP_ID_${i}__`
+      const generateComponentPlaceholder = i => `__COMP_ID_${i}__`
 
       let css = quasis.reduce((acc, { value: { raw } }, i) => {
-        let expr = ''
+        let expression = ''
         if (expressions[i]) {
           const expressionIndex = this.expressions.indexOf(expressions[i])
           if (expressionIndex !== -1) {
-            expr = expressionPlaceholder(expressionIndex)
+            expression = expressionPlaceholder(expressionIndex)
           } else {
             this.expressions.push(expressions[i])
-            expr = expressionPlaceholder(this.expressions.length - 1)
+            expression = expressionPlaceholder(this.expressions.length - 1)
           }
         }
-        return `${acc}${raw}${expr}`
+        return `${acc}${raw}${expression}`
       }, '')
 
-      let comp
+      let componentPlaceholder
+      const componentIndex = this.componentSelectors.indexOf(name)
 
-      const compIndex = this.compNames.indexOf(name)
-
-      if (compIndex !== -1) {
-        comp = compPlaceholder(compIndex)
+      if (componentIndex !== -1) {
+        componentPlaceholder = generateComponentPlaceholder(componentIndex)
       } else {
-        this.compNames.push(name)
-        comp = compPlaceholder(this.compNames.length - 1)
+        this.componentSelectors.push(name)
+        componentPlaceholder = generateComponentPlaceholder(
+          this.componentSelectors.length - 1,
+        )
       }
 
-      css = `${comp} {${css}}`
+      // insert placeholder in place of component selector to allow parsing
+      css = `${componentPlaceholder} {${css}}`
       ;({ css } = postcss([nested]).process(css))
 
-      const cssObj = parse(css)
-
-      const { stylesheet: { rules } } = cssObj
+      const cssAst = parse(css)
+      // now we can extract media queries from template literal
+      const { stylesheet: { rules } } = cssAst
 
       const mediaRules = rules.filter(({ type }, index) => {
-        const cond = type === 'media'
-        if (cond) rules.splice(index, 1)
-        return cond
+        const ifMediaType = type === 'media'
+        if (ifMediaType) rules.splice(index, 1)
+        return ifMediaType
       })
 
+      // push media queries to global collection
       if (mediaRules.length > 0) this.mediaRules.push(...mediaRules)
 
-      css = stringify(cssObj).replace(componentsRegex, '&')
+      // leftover CSS is converted back to CSS string
+      css = stringify(cssAst).replace(componentsRegex, '&')
 
-      // extract expressions from css
-      const { quasiTerms, exprTerms } = splitExpressions(css)
-      // get quasis from AST
+      const { quasiTerms, expressionTerms } = splitExpressions(css)
       const quasisAst = buildQuasisAst(t, quasiTerms)
 
-      const exprsAst = exprTerms.map(expressionIndex => this.expressions[expressionIndex])
+      const expressionsAst = expressionTerms.map(
+        expressionIndex => this.expressions[expressionIndex],
+      )
 
+      // modify template literal to reflect extraction of media queries
       quasis.splice(0, quasis.length, ...quasisAst)
-      expressions.splice(0, expressions.length, ...exprsAst)
+      expressions.splice(0, expressions.length, ...expressionsAst)
     },
   },
 })
