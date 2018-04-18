@@ -9,22 +9,17 @@ const Arrow = styled.div`
 const color = 'rebeccapurple'
 
 const RightArrow = styled.div`
-  background-color: green;
-  flex: 2;
-  
-  > a {
-    flex: 4;
-  }
-
-  ${Arrow}:hover > & {
-    background-color: orange;
-  }
-
-  @media screen and (min-width: 400px) {
+  @media screen and (min-width: 480px) {
     background-color: ${color};
     ${Arrow}:hover > & {
       background-color: orange;
     }
+  }
+`
+
+const LeftArrow = styled.div`
+  @media screen and (min-width: 480px) {
+    background-color: #000;
   }
 `
 
@@ -34,4 +29,4 @@ injectGlobal`
   }
 `
 
-export default () => <div><RightArrow /></div>
+export default () => <div><LeftArrow /><RightArrow /></div>
