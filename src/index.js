@@ -136,21 +136,25 @@ module.exports = ({ types: t }) => ({
       // component selector
       const { parent: { id: { name } } } = path
 
-      const expressionPlaceholder = i => `__QUASI_EXPR_${i}__`
+      const generateExpressionPlaceholder = i => `__QUASI_EXPR_${i}__`
       const generateComponentPlaceholder = i => `__COMP_ID_${i}__`
 
       let css = quasis.reduce((acc, { value: { raw } }, i) => {
-        let expression = ''
+        let expressionPlaceholder = ''
         if (expressions[i]) {
           const expressionIndex = this.expressions.indexOf(expressions[i])
           if (expressionIndex !== -1) {
-            expression = expressionPlaceholder(expressionIndex)
+            expressionPlaceholder = generateExpressionPlaceholder(
+              expressionIndex,
+            )
           } else {
             this.expressions.push(expressions[i])
-            expression = expressionPlaceholder(this.expressions.length - 1)
+            expressionPlaceholder = generateExpressionPlaceholder(
+              this.expressions.length - 1,
+            )
           }
         }
-        return `${acc}${raw}${expression}`
+        return `${acc}${raw}${expressionPlaceholder}`
       }, '')
 
       let componentPlaceholder
