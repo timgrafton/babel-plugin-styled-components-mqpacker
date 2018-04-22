@@ -1,7 +1,7 @@
 {
   "name": "babel-plugin-styled-components-mqpacker",
-  "version": "0.1.0",
-  "description": "Babel plugin for packing styled component CSS media queries into one",
+  "version": "1.0.0",
+  "description": "Babel plugin for packing styled components CSS media queries together",
   "keywords": [
     "styled-components",
     "babel-plugin",
@@ -32,19 +32,20 @@
   "main": "dist/index.js",
   "scripts": {
     "prepare": "cross-env BABEL_ENV=plugin babel src -d dist",
-    "test": "cross-env BABEL_ENV=test babel test/src -d test/dist",
-    "start": "node test/dist/index.js"
+    "test": "cross-env BABEL_ENV=test babel test/src -d test/dist"
   },
   "license": "MIT",
   "dependencies": {
-    "@babel/cli": "^7.0.0-beta.42",
-    "@babel/core": "^7.0.0-beta.42",
-    "@babel/preset-env": "^7.0.0-beta.42",
-    "@babel/preset-react": "^7.0.0-beta.42",
-    "cross-env": "^5.1.4",
     "css": "^2.2.1",
     "css-mqpacker": "^6.0.2",
     "postcss": "^6.0.20",
     "postcss-nested": "^3.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0-beta.42",
+    "@babel/core": "^7.0.0-beta.42",
+    "@babel/preset-env": "^7.0.0-beta.42",
+    "@babel/preset-react": "^7.0.0-beta.42",
+    "cross-env": "^5.1.4"
   }
 }
