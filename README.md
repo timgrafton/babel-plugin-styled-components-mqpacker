@@ -11,7 +11,7 @@ Babel plugin for packing [styled components](https://github.com/styled-component
 ### Installation
 
 ```
-npm install babel-plugin-styled-components-mqpacker --save-dev
+npm i babel-plugin-styled-components-mqpacker --save-dev
 ```
 
 ### Example
