@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-styled-components-mqpacker",
-  "version": "1.0.1",
+  "version": "1.0.2-0",
   "description": "Babel plugin for packing styled components CSS media queries together",
   "keywords": [
     "styled-components",
