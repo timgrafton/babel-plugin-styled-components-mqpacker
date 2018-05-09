@@ -2,31 +2,49 @@ let React
 let styled
 let injectGlobal
 
-const Arrow = styled.div`
-  background-color: blue;
-`
+const ItemColor = '#D9BF9C'
 
-const color = 'rebeccapurple'
+const List = styled.ul`
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  font-size: 25px;
+  text-align: center;
+  background-color: #f2ddc0;
+  color: ${ItemColor};
 
-const RightArrow = styled.div`
   @media screen and (min-width: 480px) {
-    background-color: ${color};
-    ${Arrow}:hover > & {
-      background-color: orange;
-    }
+    display: inline-block;
   }
 `
 
-const LeftArrow = styled.div`
+const Item = styled.li`
+  padding: 10px 0 10px;
+
   @media screen and (min-width: 480px) {
-    background-color: #000;
+    padding: 0 10px 0 10px;
+    float: left;
+
+    &:hover {
+      text-decoration: underline white;
+      cursor: pointer;
+    }
   }
 `
 
 injectGlobal`
   body {
-    background-color: blue;
+    background-color: white;
   }
 `
 
-export default () => <div><LeftArrow /><RightArrow /></div>
+export default () => (
+  <div>
+    <h1>Shopping List</h1>
+    <List>
+      <Item>Tomatoes</Item>
+      <Item>Onions</Item>
+      <Item>Asparagus</Item>
+    </List>
+  </div>
+)

@@ -51,7 +51,12 @@ module.exports = ({ types: t }) => ({
   visitor: {
     Program: {
       // media queries from all styled components are packed together on traversal exit
-      exit({ node: { body }, scope: { bindings: { injectGlobal } } }) {
+      exit({
+        node: { body },
+        scope: {
+          bindings: { injectGlobal },
+        },
+      }) {
         if (this.mediaRules.length <= 0) return
         // stringify media queries object back into css
         let css = stringify({
@@ -77,9 +82,11 @@ module.exports = ({ types: t }) => ({
         if (injectGlobal) {
           // add media queries to existing injectGlobal method
           const { referencePaths } = injectGlobal
-          const { container: { quasi: { quasis } } } = referencePaths[
-            referencePaths.length - 1
-          ]
+          const {
+            container: {
+              quasi: { quasis },
+            },
+          } = referencePaths[referencePaths.length - 1]
           const { value } = quasis[quasis.length - 1]
           value.raw += css
           value.cooked += css
@@ -120,7 +127,12 @@ module.exports = ({ types: t }) => ({
       },
     },
     TaggedTemplateExpression(path) {
-      const { node: { tag, quasi: { expressions, quasis } } } = path
+      const {
+        node: {
+          tag,
+          quasi: { expressions, quasis },
+        },
+      } = path
       const tmatch = () =>
         (tag.object && tag.object.name && tag.object.name === 'styled') ||
         (tag.property && tag.property.name && tag.property.name === 'extend') ||
@@ -134,7 +146,11 @@ module.exports = ({ types: t }) => ({
       if (!tmatch()) return
 
       // component selector
-      const { parent: { id: { name } } } = path
+      const {
+        parent: {
+          id: { name },
+        },
+      } = path
 
       const generateExpressionPlaceholder = i => `__QUASI_EXPR_${i}__`
       const generateComponentPlaceholder = i => `__COMP_ID_${i}__`
@@ -175,7 +191,9 @@ module.exports = ({ types: t }) => ({
 
       const cssAst = parse(css)
       // now we can extract media queries from template literal
-      const { stylesheet: { rules } } = cssAst
+      const {
+        stylesheet: { rules },
+      } = cssAst
 
       const mediaRules = rules.filter(({ type }, index) => {
         const ifMediaType = type === 'media'
