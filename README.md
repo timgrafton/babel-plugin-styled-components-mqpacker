@@ -1,5 +1,6 @@
 # babel-plugin-styled-components-mqpacker
 
+## ! This plugin is now archived and read-only, use with caution. !
 Babel plugin for packing [styled components](https://github.com/styled-components/styled-components) CSS media queries together.
 
 ### Prerequisites
